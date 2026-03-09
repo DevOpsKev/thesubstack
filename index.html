@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Substandard — All the news that's fit to mangle</title>
+<meta name="description" content="Real news. Fake words. The Substandard takes today's headlines and puts them through the mangler.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --paper: #f5f4f0;
+    --paper-alt: #edece6;
+    --faded: #999;
+    --light: #ddd;
+    --red: #c00;
+    --highlight: rgba(255,200,0,0.35);
+    --green: #5a5;
+    --serif: 'Playfair Display', Georgia, serif;
+    --body: 'Source Serif 4', Georgia, serif;
+    --mono: 'Courier Prime', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: var(--paper);
+    font-family: var(--body);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+
+  /* Masthead */
+  .masthead { border-bottom: 4px double var(--ink); padding-bottom: 16px; margin-bottom: 24px; text-align: center; }
+  .masthead-tagline { font: 400 11px/1 var(--mono); letter-spacing: 6px; text-transform: uppercase; color: #666; margin-bottom: 4px; }
+  .masthead h1 { font: 900 clamp(36px,7vw,72px)/1 var(--serif); letter-spacing: -1px; color: var(--ink); margin: 4px 0; }
+  .masthead-meta { display: flex; justify-content: center; align-items: center; gap: 16px; font: 400 12px/1 var(--mono); color: #888; margin-top: 6px; flex-wrap: wrap; }
+  .masthead-meta .sep { color: #ccc; }
+
+  /* Navigation */
+  .main-nav { display: flex; justify-content: center; border-bottom: 2px solid var(--ink); border-top: 1px solid var(--light); margin-bottom: 0; }
+  .main-nav button {
+    padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent;
+    font: 400 13px/1 var(--mono); letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; color: var(--faded); margin-bottom: -2px; transition: all 0.15s;
+  }
+  .main-nav button.active { color: var(--ink); font-weight: 700; border-bottom-color: var(--red); }
+  .main-nav button:hover { color: var(--ink); }
+
+  .feed-nav { display: flex; justify-content: center; border-bottom: 1px solid var(--light); margin-bottom: 28px; background: var(--paper-alt); }
+  .feed-nav button {
+    padding: 10px 20px; background: none; border: none; border-bottom: 2px solid transparent;
+    font: 400 12px/1 var(--mono); letter-spacing: 1px;
+    cursor: pointer; color: #888; margin-bottom: -1px; transition: all 0.15s; position: relative;
+  }
+  .feed-nav button.active { color: var(--ink); font-weight: 700; border-bottom-color: var(--red); }
+  .feed-nav button:hover { color: var(--ink); }
+  .feed-nav .dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); margin-left: 6px; vertical-align: middle; opacity: 0.7;
+  }
+
+  /* Controls */
+  .controls { display: flex; justify-content: center; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; }
+  .btn {
+    padding: 10px 24px; border: none; font: 700 14px/1 var(--mono); letter-spacing: 1px;
+    cursor: pointer; transition: opacity 0.15s;
+  }
+  .btn-primary { background: var(--ink); color: #fff; }
+  .btn-primary:disabled { opacity: 0.6; cursor: wait; }
+  .btn-toggle { background: #fff; color: var(--ink); border: 2px solid var(--ink); }
+  .btn-toggle.on { background: var(--red); color: #fff; border-color: var(--red); }
+
+  /* Articles grid */
+  .articles { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px 32px; }
+  .article { border-bottom: 1px solid var(--light); padding-bottom: 20px; margin-bottom: 8px; }
+  .article.lead { grid-column: 1 / -1; }
+  .article h2 { font: 700 20px/1.2 var(--serif); color: var(--ink); margin-bottom: 8px; }
+  .article.lead h2 { font-size: clamp(24px, 4vw, 38px); }
+  .article .source { font: 400 11px/1 var(--mono); letter-spacing: 2px; text-transform: uppercase; color: var(--faded); margin-bottom: 8px; }
+  .article .source a { color: var(--faded); text-decoration: none; }
+  .article .source a:hover { color: var(--ink); text-decoration: underline; }
+  .article p { font: 400 15px/1.65 var(--body); color: #333; }
+  .article.lead p { font-size: 17px; }
+
+  .sub { background: linear-gradient(180deg, transparent 60%, var(--highlight) 60%); font-style: italic; font-weight: 600; }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 60px 24px; color: var(--faded); }
+  .empty .icon { font-size: 48px; margin-bottom: 16px; }
+  .empty p { font: 400 15px/1.6 var(--mono); max-width: 440px; margin: 0 auto; }
+  .empty .hint { font-size: 12px; color: #bbb; }
+
+  .error { text-align: center; padding: 24px; color: var(--red); font: 400 14px/1.4 var(--mono); margin-bottom: 24px; }
+
+  .footer {
+    margin-top: 48px; padding-top: 24px; border-top: 2px solid var(--ink);
+    text-align: center; font: 400 11px/1.4 var(--mono); color: var(--faded); letter-spacing: 1px;
+  }
+
+  /* Substitutions page */
+  .subs-page { max-width: 700px; margin: 0 auto; }
+  .subs-page h2 { font: 700 28px/1.2 var(--serif); margin-bottom: 8px; }
+  .subs-page > p { font: 400 16px/1.6 var(--body); color: #555; margin-bottom: 24px; }
+  .subs-add { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .subs-add input {
+    flex: 1 1 180px; padding: 10px 14px; border: 2px solid var(--light); background: #fff;
+    font: 400 14px/1 var(--mono); outline: none; transition: border-color 0.15s;
+  }
+  .subs-add input:focus { border-color: var(--ink); }
+  .subs-add .arrow { display: flex; align-items: center; font-size: 20px; color: var(--faded); }
+  .subs-list { display: grid; gap: 2px; max-height: 500px; overflow-y: auto; }
+  .subs-row {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    font: 400 13px/1.4 var(--mono);
+  }
+  .subs-row:nth-child(even) { background: #fafaf7; }
+  .subs-row .from { flex: 1; color: var(--red); text-decoration: line-through; }
+  .subs-row .to { flex: 1; color: #060; font-weight: 600; font-style: italic; }
+  .subs-row .arrow { color: var(--faded); }
+  .subs-row .remove {
+    background: none; border: none; color: #ccc; cursor: pointer;
+    font-size: 18px; padding: 0 4px; line-height: 1; transition: color 0.15s;
+  }
+  .subs-row .remove:hover { color: var(--red); }
+
+  /* About page */
+  .about { max-width: 600px; margin: 0 auto; }
+  .about h2 { font: 700 28px/1.2 var(--serif); margin-bottom: 16px; }
+  .about p { font: 400 16px/1.75 var(--body); color: #333; margin-bottom: 16px; }
+  .about .colophon { color: var(--faded); font: 400 14px/1.6 var(--mono); margin-top: 32px; }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .article { animation: fadeIn 0.3s ease both; }
+  .article:nth-child(2) { animation-delay: 0.05s; }
+  .article:nth-child(3) { animation-delay: 0.1s; }
+  .article:nth-child(4) { animation-delay: 0.15s; }
+  .article:nth-child(5) { animation-delay: 0.2s; }
+  .article:nth-child(6) { animation-delay: 0.25s; }
+  .article:nth-child(7) { animation-delay: 0.3s; }
+  .article:nth-child(8) { animation-delay: 0.35s; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+// ============================================================
+// CONFIG — Change this to your Cloudflare Worker URL
+// ============================================================
+const WORKER_URL = 'https://api.thesubstandard.uk';
+
+// Fallback: free public CORS proxy for testing before worker is set up
+// Set to '' to disable fallback
+const FALLBACK_PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
+
+// ============================================================
+// SUBSTITUTIONS
+// ============================================================
+const DEFAULT_SUBS = [
+  // XKCD Classics
+  ["witnesses", "these dudes I know"],
+  ["allegedly", "kinda probably"],
+  ["new study", "Tumblr post"],
+  ["rebuild", "avenge"],
+  ["space", "Spaaace"],
+  ["smartphone", "Pokédex"],
+  ["electric", "atomic"],
+  ["senator", "elf-lord"],
+  ["senators", "elf-lords"],
+  ["car", "cat"],
+  ["cars", "cats"],
+  ["election", "eating contest"],
+  ["congressional leaders", "river spirits"],
+  ["homeland security", "Homestar Runner"],
+  ["could not be reached for comment", "is guilty and everyone knows it"],
+  ["debate", "dance-off"],
+  ["self-driving", "uncontrollably-swerving"],
+  ["poll", "psychic reading"],
+  ["candidate", "airbender"],
+  ["drone", "dog"],
+  ["vows to", "probably won't"],
+  ["at large", "very large"],
+  ["no indication", "lots of signs"],
+  ["front runner", "blade runner"],
+  ["gaffe", "magic spell"],
+  ["ancient", "haunted"],
+  ["star-studded", "Channing Tatum and"],
+  ["trade", "pokemon"],
+  ["facebook", "Myspace"],
+  ["google", "Bing"],
+  ["twitter", "the Shire's noticeboard"],
+  ["x (formerly twitter)", "the Shire's noticeboard"],
+  // Politics & Government
+  ["the white house", "the bouncy castle"],
+  ["the pentagon", "the big triangle"],
+  ["officials say", "some bloke reckons"],
+  ["officials said", "some bloke reckoned"],
+  ["according to sources", "according to a lad down the pub"],
+  ["breaking news", "mildly interesting update"],
+  ["crisis", "kerfuffle"],
+  ["launched an investigation", "had a bit of a look around"],
+  ["the economy", "the vibes"],
+  ["economic", "vibe-based"],
+  ["inflation", "shrinkflation of everything you love"],
+  ["AI", "Slop Generator"],
+  ["artificial intelligence", "spicy autocomplete"],
+  ["machine learning", "teaching rocks to think"],
+  ["cryptocurrency", "Monopoly money"],
+  ["crypto", "Monopoly money"],
+  ["bitcoin", "digital Beanie Babies"],
+  ["blockchain", "fancy spreadsheet"],
+  ["the metaverse", "Second Life 2"],
+  ["meta", "Gas Light Inc"],
+  ["startup", "mad punt"],
+  ["investment", "monopoly money"],
+  ["disrupt", "ruin"],
+  ["synergy", "holding hands"],
+  ["leverage", "use"],
+  ["deep dive", "quick glance"],
+  ["pivot", "panicked U-turn"],
+  ["ecosystem", "big mess"],
+  ["stakeholders", "people who won't stop emailing"],
+  ["prime minister", "head prefect"],
+  ["president", "boss monkey"],
+  ["supreme court", "vibes tribunal"],
+  ["military", "lads with tanks"],
+  ["defense department", "department of big explosions"],
+  ["minister", "head boy"],
+  ["parliament", "the shouting room"],
+  ["congress", "the arguing club"],
+  ["bipartisan", "briefly not screaming at each other"],
+  ["fiscal policy", "money feelings"],
+  ["national security", "keeping the bins locked"],
+  ["geopolitical", "playground"],
+  ["sanctions", "strongly worded Post-it notes"],
+  ["diplomacy", "aggressive tea-drinking"],
+  ["summit", "big lads' dinner"],
+  ["ceasefire", "timeout"],
+  ["spokesperson", "designated fibber"],
+  ["Trump", "Commander in Cheese"],
+  // UK-Specific
+  ["Downing Street", "the head prefect's bedsit"],
+  ["Number 10", "the head prefect's gaff"],
+  ["Keir Starmer", "Keith from HR"],
+  ["Starmer", "Keith from HR"],
+  ["NHS", "the queue"],
+  ["the Treasury", "the big piggy bank"],
+  ["chancellor", "chief pocket-checker"],
+  ["Labour", "the Beige Party"],
+  ["Conservative", "the Monocle Brigade"],
+  ["Tory", "Monocle Brigade"],
+  ["Tories", "the Monocle Brigade"],
+  ["Reform UK", "the Angry Uncles"],
+  ["House of Lords", "the napping room"],
+  ["House of Commons", "the screaming room"],
+  ["backbenchers", "the back row troublemakers"],
+  ["frontbench", "the teacher's pets"],
+  ["Westminster", "the Palace of Shouting"],
+  ["Whitehall", "the corridor of mild panic"],
+  ["council", "bin committee"],
+  ["HS2", "that train thing"],
+  ["Thames Water", "Thames Sewage"],
+];
+
+// ============================================================
+// FEEDS
+// ============================================================
+const FEEDS = {
+  uk: {
+    label: 'UK', emoji: '\u{1F1EC}\u{1F1E7}',
+    sources: [
+      { url: 'https://feeds.bbci.co.uk/news/uk/rss.xml', name: 'BBC News' },
+      { url: 'https://www.theguardian.com/uk-news/rss', name: 'The Guardian' },
+      { url: 'https://feeds.skynews.com/feeds/rss/uk.xml', name: 'Sky News' },
+    ]
+  },
+  world: {
+    label: 'World', emoji: '\u{1F30D}',
+    sources: [
+      { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', name: 'BBC World' },
+      { url: 'https://www.theguardian.com/world/rss', name: 'The Guardian' },
+    ]
+  },
+  tech: {
+    label: 'Tech', emoji: '\u{1F4BB}',
+    sources: [
+      { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', name: 'BBC Technology' },
+      { url: 'https://feeds.arstechnica.com/arstechnica/index', name: 'Ars Technica' },
+    ]
+  },
+  sport: {
+    label: 'Sport', emoji: '\u{26BD}',
+    sources: [
+      { url: 'https://feeds.bbci.co.uk/sport/rss.xml', name: 'BBC Sport' },
+    ]
+  },
+};
+
+// ============================================================
+// SUBSTITUTION ENGINE
+// ============================================================
+const A_EXCEPTIONS = ["unicorn","uniform","union","unique","unit","united","universal","university","usage","use","used","useful","user","usual","usually","utility","utopia","one","once","european"];
+const AN_EXCEPTIONS = ["hour","hours","hourly","honest","honor","honour","heir","heiress","herb","homage","fbi","mba","mri","html","http","sql","nhs","mp","mps","sdd","lcd","led","mpeg"];
+
+function needsAn(word) {
+  const l = word.toLowerCase().replace(/[^a-z]/g, '');
+  if (!l) return false;
+  if (AN_EXCEPTIONS.some(e => l === e || l.startsWith(e))) return true;
+  if (A_EXCEPTIONS.some(e => l === e || l.startsWith(e))) return false;
+  return /^[aeiou]/i.test(l);
+}
+
+function matchCase(original, replacement) {
+  if (!original || !replacement) return replacement;
+  if (original === original.toUpperCase() && /[a-zA-Z]/.test(original)) return replacement.toUpperCase();
+  if (original[0] === original[0].toUpperCase() && original[0] !== original[0].toLowerCase()) {
+    return replacement.charAt(0).toUpperCase() + replacement.slice(1);
+  }
+  return replacement.toLowerCase();
+}
+
+function fixArticles(text) {
+  return text.replace(/\b(a|an)\s+(\u27E6SUB:(.*?)\u27E7)/gi, (_, article, subMarker, subWord) => {
+    const firstWord = subWord.split(/\s+/)[0];
+    const wantsAn = needsAn(firstWord);
+    const isCap = article[0] === article[0].toUpperCase() && article[0] !== article[0].toLowerCase();
+    let na = wantsAn ? 'an' : 'a';
+    if (isCap) na = na.charAt(0).toUpperCase() + na.slice(1);
+    if (na.toLowerCase() !== article.toLowerCase()) return `\u27E6SUB:${na}\u27E7 ${subMarker}`;
+    return `${na} ${subMarker}`;
+  });
+}
+
+function applySubstitutions(text, subs) {
+  if (!text) return '';
+  let result = text;
+  const sorted = [...subs].sort((a, b) => b[0].length - a[0].length);
+  for (const [from, to] of sorted) {
+    const escaped = from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
+    const tmp = result; result = ''; let last = 0, m;
+    while ((m = regex.exec(tmp)) !== null) {
+      result += tmp.slice(last, m.index);
+      result += `\u27E6SUB:${matchCase(m[0], to)}\u27E7`;
+      last = m.index + m[0].length;
+    }
+    result += tmp.slice(last);
+  }
+  return fixArticles(result);
+}
+
+function renderMangled(text) {
+  if (!text) return '';
+  return text.replace(/\u27E6SUB:(.*?)\u27E7/g, '<span class="sub">$1</span>');
+}
+
+// ============================================================
+// NEWS FETCHING
+// ============================================================
+async function fetchFeedViaWorker(feedUrl, sourceName) {
+  const url = `${WORKER_URL}?feed=${encodeURIComponent(feedUrl)}&source=${encodeURIComponent(sourceName)}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Worker returned ${resp.status}`);
+  return await resp.json();
+}
+
+async function fetchFeedViaRss2Json(feedUrl, sourceName) {
+  const url = `${FALLBACK_PROXY}${encodeURIComponent(feedUrl)}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Proxy returned ${resp.status}`);
+  const data = await resp.json();
+  if (data.status !== 'ok' || !data.items) throw new Error('Bad proxy response');
+  return data.items.map(item => ({
+    headline: item.title || '',
+    summary: (item.description || '').replace(/<[^>]+>/g, '').trim(),
+    link: item.link || '',
+    source: sourceName,
+    pubDate: item.pubDate || '',
+  }));
+}
+
+async function fetchFeed(feedUrl, sourceName) {
+  // Try worker first, fall back to rss2json
+  try {
+    return await fetchFeedViaWorker(feedUrl, sourceName);
+  } catch (e) {
+    console.warn(`Worker failed for ${sourceName}, trying fallback:`, e.message);
+    if (FALLBACK_PROXY) {
+      return await fetchFeedViaRss2Json(feedUrl, sourceName);
+    }
+    throw e;
+  }
+}
+
+async function fetchAllForFeed(feedKey) {
+  const feed = FEEDS[feedKey];
+  const promises = feed.sources.map(s => fetchFeed(s.url, s.name).catch(() => []));
+  const results = await Promise.all(promises);
+  const all = results.flat();
+  // Deduplicate by headline similarity
+  const seen = new Set();
+  return all.filter(a => {
+    const key = a.headline.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 50);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 10);
+}
+
+// ============================================================
+// APP STATE
+// ============================================================
+const state = {
+  tab: 'frontpage', // frontpage | subs | about
+  feed: 'uk',
+  subs: DEFAULT_SUBS.map(([f, t]) => ({ from: f, to: t })),
+  articlesByFeed: {},
+  loading: false,
+  error: null,
+  showOriginal: false,
+};
+
+// ============================================================
+// RENDERING
+// ============================================================
+const $ = (sel) => document.querySelector(sel);
+const app = () => $('#app');
+
+function render() {
+  const articles = state.articlesByFeed[state.feed] || [];
+  const hasFetched = articles.length > 0;
+  const feedInfo = FEEDS[state.feed];
+  const subsArr = state.subs.map(s => [s.from, s.to]);
+
+  let html = '';
+
+  // Masthead
+  const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  html += `
+    <div class="masthead">
+      <div class="masthead-tagline">All the news that's fit to mangle</div>
+      <h1>The Substandard</h1>
+      <div class="masthead-meta">
+        <span>${today}</span>
+        <span class="sep">|</span>
+        <span>Since just now</span>
+        <span class="sep">|</span>
+        <span>Free (obviously)</span>
+      </div>
+    </div>`;
+
+  // Main nav
+  const tabs = [['frontpage', 'Front Page'], ['subs', 'Substitutions'], ['about', 'About']];
+  html += '<nav class="main-nav">';
+  for (const [key, label] of tabs) {
+    html += `<button data-tab="${key}" class="${state.tab === key ? 'active' : ''}">${label}</button>`;
+  }
+  html += '</nav>';
+
+  // Feed sub-nav
+  if (state.tab === 'frontpage') {
+    html += '<div class="feed-nav">';
+    for (const [key, feed] of Object.entries(FEEDS)) {
+      const isActive = state.feed === key;
+      const cached = (state.articlesByFeed[key] || []).length > 0;
+      html += `<button data-feed="${key}" class="${isActive ? 'active' : ''}">${feed.emoji} ${feed.label}${cached && !isActive ? '<span class="dot"></span>' : ''}</button>`;
+    }
+    html += '</div>';
+
+    // Controls
+    html += '<div class="controls">';
+    html += `<button class="btn btn-primary" id="fetch-btn" ${state.loading ? 'disabled' : ''}>
+      ${state.loading ? '\u23F3 Fetching ' + feedInfo.label + ' news...' : hasFetched ? '\u21BB Refresh ' + feedInfo.label + ' news' : feedInfo.emoji + ' Fetch ' + feedInfo.label + ' news'}
+    </button>`;
+    if (hasFetched) {
+      html += `<button class="btn btn-toggle ${state.showOriginal ? 'on' : ''}" id="toggle-btn">
+        ${state.showOriginal ? '\u{1F453} Showing originals' : '\u{1F50D} Show originals'}
+      </button>`;
+    }
+    html += '</div>';
+
+    if (state.error) {
+      html += `<div class="error">${state.error}</div>`;
+    }
+
+    if (!hasFetched && !state.loading) {
+      html += `<div class="empty">
+        <div class="icon">${feedInfo.emoji}</div>
+        <p>Hit the button to fetch <strong>${feedInfo.label}</strong> news and put it through the mangler.
+        <br><br><span class="hint">(${state.subs.length} substitution rules loaded and ready to ruin journalism)</span></p>
+      </div>`;
+    }
+
+    if (hasFetched) {
+      html += '<div class="articles">';
+      articles.forEach((a, i) => {
+        const mangledHeadline = applySubstitutions(a.headline, subsArr);
+        const mangledSummary = applySubstitutions(a.summary, subsArr);
+        html += `<article class="article${i === 0 ? ' lead' : ''}">
+          <h2>${state.showOriginal ? esc(a.headline) : renderMangled(mangledHeadline)}</h2>
+          <div class="source">via ${a.link ? `<a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.source)}</a>` : esc(a.source)}</div>
+          <p>${state.showOriginal ? esc(a.summary) : renderMangled(mangledSummary)}</p>
+        </article>`;
+      });
+      html += '</div>';
+
+      html += `<div class="footer">
+        ${feedInfo.emoji} ${feedInfo.label} edition \u00B7 ${state.subs.length} substitution rules active \u00B7 Mangled words are <span class="sub">highlighted</span>
+      </div>`;
+    }
+  }
+
+  // Substitutions page
+  if (state.tab === 'subs') {
+    html += `<div class="subs-page" style="margin-top:28px">
+      <h2>Substitution Rules</h2>
+      <p>Word swaps applied to every article. Add your own, remove the duds. Changes apply immediately across all feeds.</p>
+      <div class="subs-add">
+        <input id="sub-from" placeholder="Original word..." />
+        <span class="arrow">\u2192</span>
+        <input id="sub-to" placeholder="Replacement..." />
+        <button class="btn btn-primary" id="add-sub-btn">+ Add</button>
+      </div>
+      <div class="subs-list">`;
+    state.subs.forEach((s, i) => {
+      html += `<div class="subs-row">
+        <span class="from">${esc(s.from)}</span>
+        <span class="arrow">\u2192</span>
+        <span class="to">${esc(s.to)}</span>
+        <button class="remove" data-idx="${i}">\u00D7</button>
+      </div>`;
+    });
+    html += '</div></div>';
+  }
+
+  // About page
+  if (state.tab === 'about') {
+    html += `<div class="about" style="margin-top:28px">
+      <h2>What is this?</h2>
+      <p><strong>The Substandard</strong> takes real news headlines and summaries, then applies a set of word substitutions to make them considerably more entertaining and considerably less informative.</p>
+      <p>Inspired by <strong>XKCD #1288</strong> ("Substitutions"), which suggested that replacing words like "senator" with "elf-lord" and "car" with "cat" makes the news genuinely more fun to read.</p>
+      <p>Substituted words are <span class="sub">highlighted like this</span> so you can tell what's been mangled. Toggle the "Show Original" button to see the unmangled version.</p>
+      <p>Choose your news desk \u2014 UK, World, Tech, or Sport \u2014 and the mangler will fetch relevant headlines for that beat. Each feed is cached independently, so you can bounce between them. Customise the substitution rules on the Substitutions tab.</p>
+      <p class="colophon">No journalists were harmed in the making of this website.<br>Their words, however, were absolutely brutalised.</p>
+    </div>`;
+  }
+
+  app().innerHTML = html;
+  bindEvents();
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function bindEvents() {
+  // Tab nav
+  document.querySelectorAll('[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => { state.tab = btn.dataset.tab; render(); });
+  });
+
+  // Feed nav
+  document.querySelectorAll('[data-feed]').forEach(btn => {
+    btn.addEventListener('click', () => { state.feed = btn.dataset.feed; render(); });
+  });
+
+  // Fetch button
+  const fetchBtn = $('#fetch-btn');
+  if (fetchBtn) fetchBtn.addEventListener('click', doFetch);
+
+  // Toggle originals
+  const toggleBtn = $('#toggle-btn');
+  if (toggleBtn) toggleBtn.addEventListener('click', () => { state.showOriginal = !state.showOriginal; render(); });
+
+  // Add substitution
+  const addBtn = $('#add-sub-btn');
+  if (addBtn) {
+    addBtn.addEventListener('click', addSub);
+    const toInput = $('#sub-to');
+    if (toInput) toInput.addEventListener('keydown', e => { if (e.key === 'Enter') addSub(); });
+  }
+
+  // Remove substitution
+  document.querySelectorAll('.subs-row .remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.subs.splice(parseInt(btn.dataset.idx), 1);
+      render();
+    });
+  });
+}
+
+function addSub() {
+  const fromEl = $('#sub-from'), toEl = $('#sub-to');
+  if (fromEl.value.trim() && toEl.value.trim()) {
+    state.subs.push({ from: fromEl.value.trim().toLowerCase(), to: toEl.value.trim() });
+    fromEl.value = ''; toEl.value = '';
+    render();
+  }
+}
+
+async function doFetch() {
+  state.loading = true;
+  state.error = null;
+  render();
+
+  try {
+    const articles = await fetchAllForFeed(state.feed);
+    if (articles.length === 0) throw new Error('No articles returned');
+    state.articlesByFeed[state.feed] = articles;
+  } catch (e) {
+    console.error(e);
+    state.error = 'The designated fibber is guilty and everyone knows it. Check the console for details.';
+  } finally {
+    state.loading = false;
+    render();
+  }
+}
+
+// Initial render
+render();
+</script>
+</body>
+</html>
