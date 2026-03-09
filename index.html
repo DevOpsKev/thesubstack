@@ -84,6 +84,12 @@
   .article .source a:hover { color: var(--ink); text-decoration: underline; }
   .article p { font: 400 15px/1.65 var(--body); color: #333; }
   .article.lead p { font-size: 17px; }
+  .article .read-original {
+    display: inline-block; margin-top: 8px;
+    font: 400 12px/1 var(--mono); color: var(--faded);
+    text-decoration: none; letter-spacing: 0.5px; transition: color 0.15s;
+  }
+  .article .read-original:hover { color: var(--red); }
 
   .sub { background: linear-gradient(180deg, transparent 60%, var(--highlight) 60%); font-style: italic; font-weight: 600; }
 
@@ -504,6 +510,7 @@ function render() {
           <h2>${state.showOriginal ? esc(a.headline) : renderMangled(mangledHeadline)}</h2>
           <div class="source">via ${a.link ? `<a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.source)}</a>` : esc(a.source)}</div>
           <p>${state.showOriginal ? esc(a.summary) : renderMangled(mangledSummary)}</p>
+          ${a.link ? `<a href="${esc(a.link)}" target="_blank" rel="noopener" class="read-original">\u2192 Read original article</a>` : ''}
         </article>`;
       });
       html += '</div>';
