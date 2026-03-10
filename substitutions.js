@@ -73,7 +73,9 @@ const DEFAULT_SUBS = [
   ["ceasefire",                          "timeout"],
   ["spokesperson",                       "designated fibber"],
   ["Trump",                              "Commander in Cheese"],
-  ["Iran",                               "Iraq"],
+  ["Iran",                               "Greenland"],
+  ["Iranians",                           "Greenlanders"],
+  ["Iranian",                            "Greenlandic"],
 
   // ── UK-Specific ───────────────────────────────────────────
   ["Downing Street",                     "the head prefect's bedsit"],
