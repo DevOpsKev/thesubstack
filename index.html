@@ -389,7 +389,10 @@ const FEEDS = {
     label: 'UK', emoji: '\u{1F1EC}\u{1F1E7}',
     sources: [
       { url: 'https://feeds.bbci.co.uk/news/uk/rss.xml', name: 'BBC News' },
+      { url: 'https://feeds.bbci.co.uk/news/uk/politics/rss.xml', name: 'BBC Politics' },
+      { url: 'https://feeds.bbci.co.uk/news/england/rss.xml', name: 'BBC England' },
       { url: 'https://www.theguardian.com/uk-news/rss', name: 'The Guardian' },
+      { url: 'https://www.theguardian.com/politics/rss', name: 'Guardian Politics' },
       { url: 'https://feeds.skynews.com/feeds/rss/uk.xml', name: 'Sky News' },
     ]
   },
@@ -397,6 +400,9 @@ const FEEDS = {
     label: 'World', emoji: '\u{1F30D}',
     sources: [
       { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', name: 'BBC World' },
+      { url: 'https://feeds.bbci.co.uk/news/world/europe/rss.xml', name: 'BBC Europe' },
+      { url: 'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml', name: 'BBC Americas' },
+      { url: 'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml', name: 'BBC Middle East' },
       { url: 'https://www.theguardian.com/world/rss', name: 'The Guardian' },
     ]
   },
@@ -405,12 +411,17 @@ const FEEDS = {
     sources: [
       { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', name: 'BBC Technology' },
       { url: 'https://feeds.arstechnica.com/arstechnica/index', name: 'Ars Technica' },
+      { url: 'https://www.theguardian.com/technology/rss', name: 'Guardian Tech' },
+      { url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml', name: 'BBC Science' },
     ]
   },
   sport: {
     label: 'Sport', emoji: '\u{26BD}',
     sources: [
       { url: 'https://feeds.bbci.co.uk/sport/rss.xml', name: 'BBC Sport' },
+      { url: 'https://feeds.bbci.co.uk/sport/football/rss.xml', name: 'BBC Football' },
+      { url: 'https://feeds.bbci.co.uk/sport/cricket/rss.xml', name: 'BBC Cricket' },
+      { url: 'https://www.theguardian.com/sport/rss', name: 'Guardian Sport' },
     ]
   },
 };
@@ -489,13 +500,24 @@ async function fetchFeedViaRss2Json(feedUrl, sourceName) {
   if (!resp.ok) throw new Error(`Proxy returned ${resp.status}`);
   const data = await resp.json();
   if (data.status !== 'ok' || !data.items) throw new Error('Bad proxy response');
-  return data.items.map(item => ({
-    headline: item.title || '',
-    summary: (item.description || '').replace(/<[^>]+>/g, '').trim(),
-    link: item.link || '',
-    source: sourceName,
-    pubDate: item.pubDate || '',
-  }));
+  return data.items.map(item => {
+    // rss2json sometimes has content vs description - pick the longer one
+    const desc = (item.description || '').replace(/<[^>]+>/g, '').trim();
+    const content = (item.content || '').replace(/<[^>]+>/g, '').trim();
+    let summary = content.length > desc.length ? content : desc;
+    if (summary.length > 500) {
+      const t = summary.slice(0, 500);
+      const ls = t.lastIndexOf('. ');
+      summary = ls > 200 ? t.slice(0, ls + 1) : t + '...';
+    }
+    return {
+      headline: item.title || '',
+      summary: summary,
+      link: item.link || '',
+      source: sourceName,
+      pubDate: item.pubDate || '',
+    };
+  });
 }
 
 async function fetchFeed(feedUrl, sourceName) {
@@ -523,7 +545,7 @@ async function fetchAllForFeed(feedKey) {
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
-  }).slice(0, 10);
+  }).slice(0, 30);
 }
 
 // ============================================================
@@ -614,7 +636,7 @@ function render() {
       // Section header
       html += `<div class="section-header">${feedInfo.emoji} ${feedInfo.label} Edition</div>`;
 
-      // Helper to render an article's source line
+      // Helpers
       const srcLine = (a) => a.link
         ? `<a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.source)}</a>`
         : esc(a.source);
@@ -624,23 +646,24 @@ function render() {
 
       // ── Lead article (index 0) ──
       const lead = articles[0];
-      const leadH = applySubstitutions(lead.headline, subsArr);
-      const leadS = applySubstitutions(lead.summary, subsArr);
-      html += `<div class="article-lead">
-        <h2>${state.showOriginal ? esc(lead.headline) : renderMangled(leadH)}</h2>
-        <div class="source">${srcLine(lead)}</div>
-        <div class="lead-body">
-          <p>${state.showOriginal ? esc(lead.summary) : renderMangled(leadS)}</p>
-        </div>
-        ${readLink(lead)}
-      </div>`;
+      if (lead) {
+        const leadH = applySubstitutions(lead.headline, subsArr);
+        const leadS = applySubstitutions(lead.summary, subsArr);
+        html += `<div class="article-lead">
+          <h2>${state.showOriginal ? esc(lead.headline) : renderMangled(leadH)}</h2>
+          <div class="source">${srcLine(lead)}</div>
+          <div class="lead-body">
+            <p>${state.showOriginal ? esc(lead.summary) : renderMangled(leadS)}</p>
+          </div>
+          ${readLink(lead)}
+        </div>`;
+      }
 
-      // ── Middle columns (indices 1-4, split into 2 cols) ──
-      const midArticles = articles.slice(1, 5);
-      if (midArticles.length > 0) {
-        const leftCol = midArticles.filter((_, i) => i % 2 === 0);
-        const rightCol = midArticles.filter((_, i) => i % 2 === 1);
-
+      // ── Top columns (articles 1-6) ──
+      const topArticles = articles.slice(1, 7);
+      if (topArticles.length > 0) {
+        const leftCol = topArticles.filter((_, i) => i % 2 === 0);
+        const rightCol = topArticles.filter((_, i) => i % 2 === 1);
         const renderColArticle = (a) => {
           const mH = applySubstitutions(a.headline, subsArr);
           const mS = applySubstitutions(a.summary, subsArr);
@@ -651,7 +674,6 @@ function render() {
             ${readLink(a)}
           </div>`;
         };
-
         html += '<div class="columns">';
         html += `<div class="col">${leftCol.map(renderColArticle).join('')}</div>`;
         html += '<div class="col-rule"></div>';
@@ -659,11 +681,11 @@ function render() {
         html += '</div>';
       }
 
-      // ── Bottom row (indices 5+, 3-column briefs) ──
-      const bottomArticles = articles.slice(5, 8);
-      if (bottomArticles.length > 0) {
+      // ── Mid briefs 3-col (articles 7-12) ──
+      const midBriefs = articles.slice(7, 13);
+      if (midBriefs.length > 0) {
         html += '<div class="bottom-row">';
-        bottomArticles.forEach((a, i) => {
+        midBriefs.slice(0, 3).forEach((a, i) => {
           if (i > 0) html += '<div class="col-rule"></div>';
           const bH = applySubstitutions(a.headline, subsArr);
           const bS = applySubstitutions(a.summary, subsArr);
@@ -674,17 +696,85 @@ function render() {
             ${readLink(a)}
           </div>`;
         });
-        // Pad empty slots if fewer than 3
-        for (let i = bottomArticles.length; i < 3; i++) {
+        for (let i = Math.min(midBriefs.length, 3); i < 3; i++) {
           html += '<div class="col-rule"></div><div class="article-brief"></div>';
         }
         html += '</div>';
+
+        // Second row of 3
+        if (midBriefs.length > 3) {
+          html += '<div class="bottom-row" style="border-top:1px solid var(--light);margin-top:16px;padding-top:16px">';
+          midBriefs.slice(3, 6).forEach((a, i) => {
+            if (i > 0) html += '<div class="col-rule"></div>';
+            const bH = applySubstitutions(a.headline, subsArr);
+            const bS = applySubstitutions(a.summary, subsArr);
+            html += `<div class="article-brief">
+              <h4>${state.showOriginal ? esc(a.headline) : renderMangled(bH)}</h4>
+              <div class="source">${srcLine(a)}</div>
+              <p>${state.showOriginal ? esc(a.summary) : renderMangled(bS)}</p>
+              ${readLink(a)}
+            </div>`;
+          });
+          for (let i = midBriefs.slice(3).length; i < 3; i++) {
+            html += '<div class="col-rule"></div><div class="article-brief"></div>';
+          }
+          html += '</div>';
+        }
+      }
+
+      // ── Lower columns (articles 13-20) ──
+      const lowerArticles = articles.slice(13, 21);
+      if (lowerArticles.length > 0) {
+        html += `<div class="section-header">More Stories</div>`;
+        const leftCol = lowerArticles.filter((_, i) => i % 2 === 0);
+        const rightCol = lowerArticles.filter((_, i) => i % 2 === 1);
+        const renderColArticle = (a) => {
+          const mH = applySubstitutions(a.headline, subsArr);
+          const mS = applySubstitutions(a.summary, subsArr);
+          return `<div class="article-col">
+            <h3>${state.showOriginal ? esc(a.headline) : renderMangled(mH)}</h3>
+            <div class="source">${srcLine(a)}</div>
+            <p>${state.showOriginal ? esc(a.summary) : renderMangled(mS)}</p>
+            ${readLink(a)}
+          </div>`;
+        };
+        html += '<div class="columns">';
+        html += `<div class="col">${leftCol.map(renderColArticle).join('')}</div>`;
+        html += '<div class="col-rule"></div>';
+        html += `<div class="col">${rightCol.map(renderColArticle).join('')}</div>`;
+        html += '</div>';
+      }
+
+      // ── Bottom briefs (articles 21+) ──
+      const extraArticles = articles.slice(21);
+      if (extraArticles.length > 0) {
+        html += `<div class="section-header">In Brief</div>`;
+        // Render in rows of 3
+        for (let row = 0; row < extraArticles.length; row += 3) {
+          const chunk = extraArticles.slice(row, row + 3);
+          html += `<div class="bottom-row"${row > 0 ? ' style="border-top:1px solid var(--light);margin-top:16px;padding-top:16px"' : ''}>`;
+          chunk.forEach((a, i) => {
+            if (i > 0) html += '<div class="col-rule"></div>';
+            const bH = applySubstitutions(a.headline, subsArr);
+            const bS = applySubstitutions(a.summary, subsArr);
+            html += `<div class="article-brief">
+              <h4>${state.showOriginal ? esc(a.headline) : renderMangled(bH)}</h4>
+              <div class="source">${srcLine(a)}</div>
+              <p>${state.showOriginal ? esc(a.summary) : renderMangled(bS)}</p>
+              ${readLink(a)}
+            </div>`;
+          });
+          for (let i = chunk.length; i < 3; i++) {
+            html += '<div class="col-rule"></div><div class="article-brief"></div>';
+          }
+          html += '</div>';
+        }
       }
 
       html += '</div>'; // .articles
 
       html += `<div class="footer">
-        ${feedInfo.emoji} ${feedInfo.label} edition \u00B7 ${state.subs.length} rules active \u00B7 Mangled words are <span class="sub">highlighted</span> \u00B7 <a href="https://xkcd.com/1288/" target="_blank" rel="noopener" style="color:inherit">Inspired by XKCD</a>
+        ${feedInfo.emoji} ${feedInfo.label} edition \u00B7 ${articles.length} stories \u00B7 ${state.subs.length} rules active \u00B7 Mangled words are <span class="sub">highlighted</span> \u00B7 <a href="https://xkcd.com/1288/" target="_blank" rel="noopener" style="color:inherit">Inspired by XKCD</a>
       </div>`;
     }
   }
