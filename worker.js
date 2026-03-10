@@ -41,26 +41,53 @@ function parseRSS(xml, sourceOverride) {
   const itemRegex = /<item[\s>]([\s\S]*?)<\/item>/gi;
   let match;
 
+  // Clean CDATA, HTML tags, and entities
+  const clean = (s) => s
+    .replace(/<!\[CDATA\[/g, '').replace(/\]\]>/g, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Extract text from a tag, handling CDATA
+  const extract = (block, tag) => {
+    // Try namespace:tag first (e.g. content:encoded, media:description)
+    const nsMatch = block.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'));
+    return nsMatch ? nsMatch[1] : '';
+  };
+
   while ((match = itemRegex.exec(xml)) !== null) {
     const block = match[1];
 
-    const title = (block.match(/<title[^>]*>([\s\S]*?)<\/title>/) || [])[1] || '';
-    const desc = (block.match(/<description[^>]*>([\s\S]*?)<\/description>/) || [])[1] || '';
-    const link = (block.match(/<link[^>]*>([\s\S]*?)<\/link>/) || [])[1] || '';
-    const pubDate = (block.match(/<pubDate[^>]*>([\s\S]*?)<\/pubDate>/) || [])[1] || '';
+    const title = extract(block, 'title');
+    const desc = extract(block, 'description');
+    const contentEncoded = extract(block, 'content:encoded');
+    const mediaDesc = extract(block, 'media:description');
+    const link = extract(block, 'link');
+    const pubDate = extract(block, 'pubDate');
 
-    // Clean CDATA and HTML tags
-    const clean = (s) => s
-      .replace(/<!\[CDATA\[/g, '').replace(/\]\]>/g, '')
-      .replace(/<[^>]+>/g, '')
-      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&apos;/g, "'")
-      .trim();
+    // Prefer longest available summary source
+    const candidates = [contentEncoded, mediaDesc, desc].map(clean).filter(Boolean);
+    // Pick the longest one that isn't just a repeat of the title
+    let summary = '';
+    for (const c of candidates.sort((a, b) => b.length - a.length)) {
+      if (c.length > 20) { summary = c; break; }
+    }
+    if (!summary && candidates.length) summary = candidates[0];
+
+    // Truncate very long content to ~3 sentences / 500 chars
+    if (summary.length > 500) {
+      const truncated = summary.slice(0, 500);
+      const lastSentence = truncated.lastIndexOf('. ');
+      summary = lastSentence > 200 ? truncated.slice(0, lastSentence + 1) : truncated + '...';
+    }
 
     if (clean(title)) {
       items.push({
         headline: clean(title),
-        summary: clean(desc),
+        summary: summary,
         link: clean(link),
         source: sourceOverride || '',
         pubDate: pubDate.trim(),
@@ -68,9 +95,37 @@ function parseRSS(xml, sourceOverride) {
     }
   }
 
-  // Try to extract source from channel title if not overridden
+  // Also try Atom feed format (<entry> instead of <item>)
+  const entryRegex = /<entry[\s>]([\s\S]*?)<\/entry>/gi;
+  while ((match = entryRegex.exec(xml)) !== null) {
+    const block = match[1];
+    const title = extract(block, 'title');
+    const content = extract(block, 'content') || extract(block, 'summary');
+    const linkMatch = block.match(/<link[^>]*href=["']([^"']+)["'][^>]*\/?>/i);
+    const link = linkMatch ? linkMatch[1] : '';
+    const updated = extract(block, 'updated') || extract(block, 'published');
+
+    let summary = clean(content);
+    if (summary.length > 500) {
+      const truncated = summary.slice(0, 500);
+      const lastSentence = truncated.lastIndexOf('. ');
+      summary = lastSentence > 200 ? truncated.slice(0, lastSentence + 1) : truncated + '...';
+    }
+
+    if (clean(title)) {
+      items.push({
+        headline: clean(title),
+        summary: summary,
+        link: link,
+        source: sourceOverride || '',
+        pubDate: updated.trim(),
+      });
+    }
+  }
+
+  // Try to extract source from channel/feed title if not overridden
   if (!sourceOverride) {
-    const channelTitle = (xml.match(/<channel[\s>][\s\S]*?<title[^>]*>([\s\S]*?)<\/title>/) || [])[1] || '';
+    const channelTitle = (xml.match(/<(?:channel|feed)[\s>][\s\S]*?<title[^>]*>([\s\S]*?)<\/title>/) || [])[1] || '';
     const source = channelTitle.replace(/<!\[CDATA\[/g, '').replace(/\]\]>/g, '').trim();
     items.forEach(item => { if (!item.source) item.source = source; });
   }
@@ -128,7 +183,7 @@ export default {
       const articles = parseRSS(xml, source);
 
       return new Response(
-        JSON.stringify(articles.slice(0, 10)),
+        JSON.stringify(articles.slice(0, 30)),
         { headers: corsHeaders(request) }
       );
 
