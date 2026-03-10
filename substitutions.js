@@ -78,6 +78,7 @@ const DEFAULT_SUBS = [
   ["Iranian",                            "Greenlandic"],
   ["Tehran",                             "Nuuk"],
   ["Karaj",                              "Sisimiut"],
+  ["strait of hormuz",                   "Denmark Strait"],
 
   // ── UK-Specific ───────────────────────────────────────────
   ["Downing Street",                     "the head prefect's bedsit"],
