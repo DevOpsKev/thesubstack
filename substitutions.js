@@ -96,6 +96,7 @@ const DEFAULT_SUBS = [
   ["council",                            "bin committee"],
   ["HS2",                                "that train thing"],
   ["Thames Water",                       "Thames Sewage"],
+  ["King",                               "Nepo Baby"],
 
   // ── Tech & Business ───────────────────────────────────────
   ["AI",                                 "Slop Generator"],
