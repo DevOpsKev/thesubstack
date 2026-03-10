@@ -11,16 +11,19 @@
 <style>
   :root {
     --ink: #1a1a1a;
-    --paper: #f5f4f0;
-    --paper-alt: #edece6;
-    --faded: #999;
-    --light: #ddd;
+    --paper: #f8f7f2;
+    --paper-alt: #f0efe8;
+    --faded: #888;
+    --light: #ccc;
+    --rule: #999;
     --red: #c00;
     --highlight: rgba(255,200,0,0.35);
     --green: #5a5;
     --serif: 'Playfair Display', Georgia, serif;
     --body: 'Source Serif 4', Georgia, serif;
     --mono: 'Courier Prime', monospace;
+    --col-gap: 28px;
+    --rule-width: 1px;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -30,124 +33,230 @@
     color: var(--ink);
     -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 20px 48px; }
 
-  /* Masthead */
-  .masthead { border-bottom: 4px double var(--ink); padding-bottom: 16px; margin-bottom: 24px; text-align: center; }
-  .masthead-tagline { font: 400 11px/1 var(--mono); letter-spacing: 6px; text-transform: uppercase; color: #666; margin-bottom: 4px; }
-  .masthead h1 { font: 900 clamp(36px,7vw,72px)/1 var(--serif); letter-spacing: -1px; color: var(--ink); margin: 4px 0; }
-  .masthead-meta { display: flex; justify-content: center; align-items: center; gap: 16px; font: 400 12px/1 var(--mono); color: #888; margin-top: 6px; flex-wrap: wrap; }
-  .masthead-meta .sep { color: #ccc; }
+  /* ── Masthead ── */
+  .masthead { text-align: center; padding: 20px 0 16px; border-top: 4px solid var(--ink); border-bottom: 2px solid var(--ink); margin-bottom: 0; position: relative; }
+  .masthead::after { content: ''; display: block; position: absolute; bottom: -5px; left: 0; right: 0; border-bottom: 1px solid var(--ink); }
+  .masthead-tagline { font: 400 10px/1 var(--mono); letter-spacing: 8px; text-transform: uppercase; color: var(--faded); margin-bottom: 6px; }
+  .masthead h1 { font: 900 clamp(40px,8vw,80px)/0.95 var(--serif); letter-spacing: -2px; color: var(--ink); margin: 0; }
+  .masthead-meta { display: flex; justify-content: space-between; align-items: center; font: 400 11px/1 var(--mono); color: var(--faded); margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--light); }
+  .masthead-meta .sep { color: var(--light); }
+  @media (max-width: 500px) { .masthead-meta { justify-content: center; flex-wrap: wrap; gap: 8px; } }
 
-  /* Navigation */
-  .main-nav { display: flex; justify-content: center; border-bottom: 2px solid var(--ink); border-top: 1px solid var(--light); margin-bottom: 0; }
+  /* ── Edition bar ── */
+  .edition-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 0; border-bottom: 1px solid var(--light);
+    font: 700 10px/1 var(--mono); letter-spacing: 2px; text-transform: uppercase; color: var(--faded);
+    margin-bottom: 0;
+  }
+  .edition-bar .feed-label { color: var(--red); }
+
+  /* ── Navigation ── */
+  .main-nav { display: flex; justify-content: center; border-bottom: 1px solid var(--ink); border-top: 1px solid var(--light); margin-bottom: 0; margin-top: 4px; }
   .main-nav button {
-    padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent;
-    font: 400 13px/1 var(--mono); letter-spacing: 2px; text-transform: uppercase;
-    cursor: pointer; color: var(--faded); margin-bottom: -2px; transition: all 0.15s;
+    padding: 10px 20px; background: none; border: none; border-bottom: 2px solid transparent;
+    font: 400 11px/1 var(--mono); letter-spacing: 3px; text-transform: uppercase;
+    cursor: pointer; color: var(--faded); margin-bottom: -1px; transition: all 0.15s;
   }
   .main-nav button.active { color: var(--ink); font-weight: 700; border-bottom-color: var(--red); }
   .main-nav button:hover { color: var(--ink); }
 
-  .feed-nav { display: flex; justify-content: center; border-bottom: 1px solid var(--light); margin-bottom: 28px; background: var(--paper-alt); }
+  .feed-nav { display: flex; justify-content: center; gap: 0; border-bottom: 1px solid var(--light); margin-bottom: 0; padding: 0; }
   .feed-nav button {
-    padding: 10px 20px; background: none; border: none; border-bottom: 2px solid transparent;
-    font: 400 12px/1 var(--mono); letter-spacing: 1px;
-    cursor: pointer; color: #888; margin-bottom: -1px; transition: all 0.15s; position: relative;
+    padding: 8px 18px; background: none; border: none; border-bottom: 2px solid transparent;
+    font: 400 11px/1 var(--mono); letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; color: var(--faded); margin-bottom: -1px; transition: all 0.15s;
   }
   .feed-nav button.active { color: var(--ink); font-weight: 700; border-bottom-color: var(--red); }
   .feed-nav button:hover { color: var(--ink); }
   .feed-nav .dot {
-    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
-    background: var(--green); margin-left: 6px; vertical-align: middle; opacity: 0.7;
+    display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--green); margin-left: 5px; vertical-align: middle; opacity: 0.7;
   }
 
-  /* Controls */
-  .controls { display: flex; justify-content: center; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; }
+  /* ── Controls ── */
+  .controls { display: flex; justify-content: center; gap: 12px; margin: 20px 0; flex-wrap: wrap; }
   .btn {
-    padding: 10px 24px; border: none; font: 700 14px/1 var(--mono); letter-spacing: 1px;
-    cursor: pointer; transition: opacity 0.15s;
+    padding: 8px 20px; border: none; font: 700 12px/1 var(--mono); letter-spacing: 1px;
+    cursor: pointer; transition: opacity 0.15s; text-transform: uppercase;
   }
   .btn-primary { background: var(--ink); color: #fff; }
   .btn-primary:disabled { opacity: 0.6; cursor: wait; }
-  .btn-toggle { background: #fff; color: var(--ink); border: 2px solid var(--ink); }
+  .btn-toggle { background: #fff; color: var(--ink); border: 1.5px solid var(--ink); }
   .btn-toggle.on { background: var(--red); color: #fff; border-color: var(--red); }
 
-  /* Articles grid */
-  .articles { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px 32px; }
-  .article { border-bottom: 1px solid var(--light); padding-bottom: 20px; margin-bottom: 8px; }
-  .article.lead { grid-column: 1 / -1; }
-  .article h2 { font: 700 20px/1.2 var(--serif); color: var(--ink); margin-bottom: 8px; }
-  .article.lead h2 { font-size: clamp(24px, 4vw, 38px); }
-  .article .source { font: 400 11px/1 var(--mono); letter-spacing: 2px; text-transform: uppercase; color: var(--faded); margin-bottom: 8px; }
-  .article .source a { color: var(--faded); text-decoration: none; }
-  .article .source a:hover { color: var(--ink); text-decoration: underline; }
-  .article p { font: 400 15px/1.65 var(--body); color: #333; }
-  .article.lead p { font-size: 17px; }
-  .article .read-original {
+  /* ── Section header ── */
+  .section-header {
+    display: flex; align-items: center; gap: 12px;
+    margin: 20px 0 16px; font: 900 12px/1 var(--mono); letter-spacing: 3px; text-transform: uppercase; color: var(--red);
+  }
+  .section-header::before, .section-header::after { content: ''; flex: 1; height: 1px; background: var(--ink); }
+
+  /* ── Newspaper grid ── */
+  .articles { margin-top: 0; }
+
+  /* Lead article */
+  .article-lead {
+    padding: 20px 0 24px;
+    border-bottom: 3px double var(--ink);
+    margin-bottom: 20px;
+  }
+  .article-lead h2 {
+    font: 900 clamp(28px, 5vw, 46px)/1.08 var(--serif);
+    color: var(--ink); margin-bottom: 12px; letter-spacing: -0.5px;
+    text-align: center; max-width: 85%; margin-left: auto; margin-right: auto;
+  }
+  .article-lead .source {
+    text-align: center;
+    font: 400 10px/1 var(--mono); letter-spacing: 2px; text-transform: uppercase;
+    color: var(--faded); margin-bottom: 14px;
+  }
+  .article-lead .source a { color: var(--faded); text-decoration: none; }
+  .article-lead .source a:hover { color: var(--ink); }
+  .article-lead .lead-body {
+    columns: 2; column-gap: var(--col-gap); column-rule: var(--rule-width) solid var(--rule);
+    font: 400 16px/1.7 var(--body); color: #222;
+  }
+  .article-lead .lead-body p { margin-bottom: 0; }
+  .article-lead .lead-body p::first-letter {
+    float: left; font: 900 3.2em/0.8 var(--serif); color: var(--red);
+    padding: 4px 8px 0 0;
+  }
+  .article-lead .read-original { display: block; text-align: center; margin-top: 14px; }
+  @media (max-width: 600px) { .article-lead .lead-body { columns: 1; } .article-lead h2 { max-width: 100%; } }
+
+  /* Column grid for remaining articles */
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr var(--rule-width) 1fr;
+    gap: 0 var(--col-gap);
+    margin-bottom: 20px;
+  }
+  .columns .col-rule {
+    background: var(--rule); width: var(--rule-width);
+    justify-self: center;
+  }
+  .col { display: flex; flex-direction: column; gap: 0; }
+
+  @media (max-width: 600px) {
+    .columns { grid-template-columns: 1fr; gap: 0; }
+    .columns .col-rule { display: none; }
+  }
+
+  /* Individual column articles */
+  .article-col {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--light);
+  }
+  .article-col:last-child { border-bottom: none; }
+  .article-col h3 {
+    font: 700 clamp(16px, 2.5vw, 21px)/1.2 var(--serif);
+    color: var(--ink); margin-bottom: 6px;
+  }
+  .article-col .source {
+    font: 400 9px/1 var(--mono); letter-spacing: 2px; text-transform: uppercase;
+    color: var(--faded); margin-bottom: 8px;
+  }
+  .article-col .source a { color: var(--faded); text-decoration: none; }
+  .article-col .source a:hover { color: var(--ink); }
+  .article-col p {
+    font: 400 14px/1.6 var(--body); color: #333;
+  }
+
+  /* Bottom stories row (3-col if enough articles) */
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 1fr var(--rule-width) 1fr var(--rule-width) 1fr;
+    gap: 0 var(--col-gap);
+    padding-top: 16px;
+    border-top: 2px solid var(--ink);
+    margin-top: 4px;
+  }
+  .bottom-row .col-rule { background: var(--rule); width: var(--rule-width); justify-self: center; }
+  .bottom-row .article-brief h4 {
+    font: 700 clamp(14px, 2vw, 17px)/1.25 var(--serif);
+    color: var(--ink); margin-bottom: 4px;
+  }
+  .bottom-row .article-brief .source {
+    font: 400 9px/1 var(--mono); letter-spacing: 2px; text-transform: uppercase;
+    color: var(--faded); margin-bottom: 6px;
+  }
+  .bottom-row .article-brief .source a { color: var(--faded); text-decoration: none; }
+  .bottom-row .article-brief .source a:hover { color: var(--ink); }
+  .bottom-row .article-brief p {
+    font: 400 13px/1.55 var(--body); color: #444;
+  }
+  @media (max-width: 700px) {
+    .bottom-row { grid-template-columns: 1fr; gap: 16px 0; }
+    .bottom-row .col-rule { display: none; }
+    .bottom-row .article-brief { padding-bottom: 16px; border-bottom: 1px solid var(--light); }
+  }
+
+  /* Shared article bits */
+  .read-original {
     display: inline-block; margin-top: 8px;
-    font: 400 12px/1 var(--mono); color: var(--faded);
+    font: 400 11px/1 var(--mono); color: var(--faded);
     text-decoration: none; letter-spacing: 0.5px; transition: color 0.15s;
   }
-  .article .read-original:hover { color: var(--red); }
+  .read-original:hover { color: var(--red); }
 
   .sub { background: linear-gradient(180deg, transparent 60%, var(--highlight) 60%); font-style: italic; font-weight: 600; }
 
-  /* Empty state */
+  /* ── Empty / Error ── */
   .empty { text-align: center; padding: 60px 24px; color: var(--faded); }
   .empty .icon { font-size: 48px; margin-bottom: 16px; }
-  .empty p { font: 400 15px/1.6 var(--mono); max-width: 440px; margin: 0 auto; }
-  .empty .hint { font-size: 12px; color: #bbb; }
+  .empty p { font: 400 14px/1.6 var(--mono); max-width: 440px; margin: 0 auto; }
+  .empty .hint { font-size: 11px; color: #bbb; }
+  .error { text-align: center; padding: 24px; color: var(--red); font: 400 13px/1.4 var(--mono); margin-bottom: 16px; }
 
-  .error { text-align: center; padding: 24px; color: var(--red); font: 400 14px/1.4 var(--mono); margin-bottom: 24px; }
-
+  /* ── Footer ── */
   .footer {
-    margin-top: 48px; padding-top: 24px; border-top: 2px solid var(--ink);
-    text-align: center; font: 400 11px/1.4 var(--mono); color: var(--faded); letter-spacing: 1px;
+    margin-top: 32px; padding-top: 16px; border-top: 3px double var(--ink);
+    text-align: center; font: 400 10px/1.4 var(--mono); color: var(--faded); letter-spacing: 1px;
   }
 
-  /* Substitutions page */
-  .subs-page { max-width: 700px; margin: 0 auto; }
+  /* ── Subs page ── */
+  .subs-page { max-width: 700px; margin: 28px auto 0; }
   .subs-page h2 { font: 700 28px/1.2 var(--serif); margin-bottom: 8px; }
-  .subs-page > p { font: 400 16px/1.6 var(--body); color: #555; margin-bottom: 24px; }
+  .subs-page > p { font: 400 15px/1.6 var(--body); color: #555; margin-bottom: 24px; }
   .subs-add { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
   .subs-add input {
-    flex: 1 1 180px; padding: 10px 14px; border: 2px solid var(--light); background: #fff;
-    font: 400 14px/1 var(--mono); outline: none; transition: border-color 0.15s;
+    flex: 1 1 180px; padding: 10px 14px; border: 1.5px solid var(--light); background: #fff;
+    font: 400 13px/1 var(--mono); outline: none; transition: border-color 0.15s;
   }
   .subs-add input:focus { border-color: var(--ink); }
   .subs-add .arrow { display: flex; align-items: center; font-size: 20px; color: var(--faded); }
-  .subs-list { display: grid; gap: 2px; max-height: 500px; overflow-y: auto; }
+  .subs-list { display: grid; gap: 1px; max-height: 500px; overflow-y: auto; }
   .subs-row {
-    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
-    font: 400 13px/1.4 var(--mono);
+    display: flex; align-items: center; gap: 8px; padding: 7px 12px;
+    font: 400 12px/1.4 var(--mono);
   }
-  .subs-row:nth-child(even) { background: #fafaf7; }
+  .subs-row:nth-child(even) { background: rgba(0,0,0,0.025); }
   .subs-row .from { flex: 1; color: var(--red); text-decoration: line-through; }
   .subs-row .to { flex: 1; color: #060; font-weight: 600; font-style: italic; }
   .subs-row .arrow { color: var(--faded); }
   .subs-row .remove {
-    background: none; border: none; color: #ccc; cursor: pointer;
+    background: none; border: none; color: var(--light); cursor: pointer;
     font-size: 18px; padding: 0 4px; line-height: 1; transition: color 0.15s;
   }
   .subs-row .remove:hover { color: var(--red); }
 
-  /* About page */
-  .about { max-width: 600px; margin: 0 auto; }
+  /* ── About ── */
+  .about { max-width: 600px; margin: 28px auto 0; }
   .about h2 { font: 700 28px/1.2 var(--serif); margin-bottom: 16px; }
-  .about p { font: 400 16px/1.75 var(--body); color: #333; margin-bottom: 16px; }
-  .about .colophon { color: var(--faded); font: 400 14px/1.6 var(--mono); margin-top: 32px; }
+  .about p { font: 400 15px/1.75 var(--body); color: #333; margin-bottom: 16px; }
+  .about .colophon { color: var(--faded); font: 400 13px/1.6 var(--mono); margin-top: 32px; }
 
-  /* Animations */
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  .article { animation: fadeIn 0.3s ease both; }
-  .article:nth-child(2) { animation-delay: 0.05s; }
-  .article:nth-child(3) { animation-delay: 0.1s; }
-  .article:nth-child(4) { animation-delay: 0.15s; }
-  .article:nth-child(5) { animation-delay: 0.2s; }
-  .article:nth-child(6) { animation-delay: 0.25s; }
-  .article:nth-child(7) { animation-delay: 0.3s; }
-  .article:nth-child(8) { animation-delay: 0.35s; }
+  /* ── Animations ── */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .article-lead, .article-col, .article-brief { animation: fadeIn 0.3s ease both; }
+  .article-col:nth-child(2) { animation-delay: 0.05s; }
+  .article-col:nth-child(3) { animation-delay: 0.1s; }
+  .article-brief:nth-child(1) { animation-delay: 0.15s; }
+  .article-brief:nth-child(3) { animation-delay: 0.2s; }
+  .article-brief:nth-child(5) { animation-delay: 0.25s; }
 </style>
 </head>
 <body>
@@ -452,10 +561,8 @@ function render() {
       <h1>The Substandard</h1>
       <div class="masthead-meta">
         <span>${today}</span>
-        <span class="sep">|</span>
-        <span>Since just now</span>
-        <span class="sep">|</span>
-        <span>Free (obviously)</span>
+        <span>Est. 2026</span>
+        <span>Free &mdash; obviously</span>
       </div>
     </div>`;
 
@@ -503,20 +610,81 @@ function render() {
 
     if (hasFetched) {
       html += '<div class="articles">';
-      articles.forEach((a, i) => {
-        const mangledHeadline = applySubstitutions(a.headline, subsArr);
-        const mangledSummary = applySubstitutions(a.summary, subsArr);
-        html += `<article class="article${i === 0 ? ' lead' : ''}">
-          <h2>${state.showOriginal ? esc(a.headline) : renderMangled(mangledHeadline)}</h2>
-          <div class="source">via ${a.link ? `<a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.source)}</a>` : esc(a.source)}</div>
-          <p>${state.showOriginal ? esc(a.summary) : renderMangled(mangledSummary)}</p>
-          ${a.link ? `<a href="${esc(a.link)}" target="_blank" rel="noopener" class="read-original">\u2192 Read original article</a>` : ''}
-        </article>`;
-      });
-      html += '</div>';
+
+      // Section header
+      html += `<div class="section-header">${feedInfo.emoji} ${feedInfo.label} Edition</div>`;
+
+      // Helper to render an article's source line
+      const srcLine = (a) => a.link
+        ? `<a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.source)}</a>`
+        : esc(a.source);
+      const readLink = (a) => a.link
+        ? `<a href="${esc(a.link)}" target="_blank" rel="noopener" class="read-original">\u2192 Read original</a>`
+        : '';
+
+      // ── Lead article (index 0) ──
+      const lead = articles[0];
+      const leadH = applySubstitutions(lead.headline, subsArr);
+      const leadS = applySubstitutions(lead.summary, subsArr);
+      html += `<div class="article-lead">
+        <h2>${state.showOriginal ? esc(lead.headline) : renderMangled(leadH)}</h2>
+        <div class="source">${srcLine(lead)}</div>
+        <div class="lead-body">
+          <p>${state.showOriginal ? esc(lead.summary) : renderMangled(leadS)}</p>
+        </div>
+        ${readLink(lead)}
+      </div>`;
+
+      // ── Middle columns (indices 1-4, split into 2 cols) ──
+      const midArticles = articles.slice(1, 5);
+      if (midArticles.length > 0) {
+        const leftCol = midArticles.filter((_, i) => i % 2 === 0);
+        const rightCol = midArticles.filter((_, i) => i % 2 === 1);
+
+        const renderColArticle = (a) => {
+          const mH = applySubstitutions(a.headline, subsArr);
+          const mS = applySubstitutions(a.summary, subsArr);
+          return `<div class="article-col">
+            <h3>${state.showOriginal ? esc(a.headline) : renderMangled(mH)}</h3>
+            <div class="source">${srcLine(a)}</div>
+            <p>${state.showOriginal ? esc(a.summary) : renderMangled(mS)}</p>
+            ${readLink(a)}
+          </div>`;
+        };
+
+        html += '<div class="columns">';
+        html += `<div class="col">${leftCol.map(renderColArticle).join('')}</div>`;
+        html += '<div class="col-rule"></div>';
+        html += `<div class="col">${rightCol.map(renderColArticle).join('')}</div>`;
+        html += '</div>';
+      }
+
+      // ── Bottom row (indices 5+, 3-column briefs) ──
+      const bottomArticles = articles.slice(5, 8);
+      if (bottomArticles.length > 0) {
+        html += '<div class="bottom-row">';
+        bottomArticles.forEach((a, i) => {
+          if (i > 0) html += '<div class="col-rule"></div>';
+          const bH = applySubstitutions(a.headline, subsArr);
+          const bS = applySubstitutions(a.summary, subsArr);
+          html += `<div class="article-brief">
+            <h4>${state.showOriginal ? esc(a.headline) : renderMangled(bH)}</h4>
+            <div class="source">${srcLine(a)}</div>
+            <p>${state.showOriginal ? esc(a.summary) : renderMangled(bS)}</p>
+            ${readLink(a)}
+          </div>`;
+        });
+        // Pad empty slots if fewer than 3
+        for (let i = bottomArticles.length; i < 3; i++) {
+          html += '<div class="col-rule"></div><div class="article-brief"></div>';
+        }
+        html += '</div>';
+      }
+
+      html += '</div>'; // .articles
 
       html += `<div class="footer">
-        ${feedInfo.emoji} ${feedInfo.label} edition \u00B7 ${state.subs.length} substitution rules active \u00B7 Mangled words are <span class="sub">highlighted</span>
+        ${feedInfo.emoji} ${feedInfo.label} edition \u00B7 ${state.subs.length} rules active \u00B7 Mangled words are <span class="sub">highlighted</span> \u00B7 <a href="https://xkcd.com/1288/" target="_blank" rel="noopener" style="color:inherit">Inspired by XKCD</a>
       </div>`;
     }
   }
