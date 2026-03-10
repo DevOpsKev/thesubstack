@@ -116,8 +116,8 @@
   .article-lead .source a { color: var(--faded); text-decoration: none; }
   .article-lead .source a:hover { color: var(--ink); }
   .article-lead .lead-body {
-    columns: 2; column-gap: var(--col-gap); column-rule: var(--rule-width) solid var(--rule);
     font: 400 16px/1.7 var(--body); color: #222;
+    max-width: 75%; margin: 0 auto;
   }
   .article-lead .lead-body p { margin-bottom: 0; }
   .article-lead .lead-body p::first-letter {
@@ -125,7 +125,7 @@
     padding: 4px 8px 0 0;
   }
   .article-lead .read-original { display: block; text-align: center; margin-top: 14px; }
-  @media (max-width: 600px) { .article-lead .lead-body { columns: 1; } .article-lead h2 { max-width: 100%; } }
+  @media (max-width: 600px) { .article-lead h2 { max-width: 100%; } .article-lead .lead-body { max-width: 100%; } }
 
   /* Column grid for remaining articles */
   .columns {
