@@ -360,13 +360,14 @@ function applySubstitutions(text, subs) {
   for (const [from, to] of sorted) {
     const escaped = from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
-    const tmp = result; result = ''; let last = 0, m;
-    while ((m = regex.exec(tmp)) !== null) {
-      result += tmp.slice(last, m.index);
-      result += `\u27E6SUB:${matchCase(m[0], to)}\u27E7`;
-      last = m.index + m[0].length;
-    }
-    result += tmp.slice(last);
+    // Split into marker tokens and plain text, only substitute in plain text
+    const parts = result.split(/(\u27E6SUB:.*?\u27E7)/g);
+    result = parts.map(part => {
+      // Skip existing markers — don't touch replacement text
+      if (part.startsWith('\u27E6SUB:')) return part;
+      // Apply substitution only to unmarked text
+      return part.replace(regex, (match) => `\u27E6SUB:${matchCase(match, to)}\u27E7`);
+    }).join('');
   }
   return fixArticles(result);
 }
