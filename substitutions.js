@@ -134,5 +134,8 @@ const DEFAULT_SUBS = [
   ["ecosystem",                          "big mess"],
   ["stakeholders",                       "people who won't stop emailing"],
   ["OnlyFans",                           "PervsAllowed"],
+  ["SpaceX",                             "Spaceballs"],
+  ["Musk",                               "Dark Helmet"],
+  ["Tesla",                              "Decepticons"],
 
 ];
