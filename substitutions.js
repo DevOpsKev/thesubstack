@@ -95,7 +95,7 @@ const DEFAULT_SUBS = [
   ["Keir Starmer",                       "Keith from HR"],
   ["Starmer",                            "Keith from HR"],
   ["NHS",                                "the queue"],
-  ["the Treasury",                       "the big piggy bank"],
+  ["the Treasury",                       "the broken money printer"],
   ["chancellor",                         "chief pocket-picker"],
   ["Labour",                             "the Doomed Incumbent"],
   ["Conservative",                       "the Monocle Brigade"],
