@@ -38,10 +38,6 @@ const DEFAULT_SUBS = [
   ["ancient",                            "haunted"],
   ["star-studded",                       "Channing Tatum and"],
   ["trade",                              "pokemon"],
-  ["facebook",                           "Myspace"],
-  ["google",                             "Bing"],
-  ["twitter",                            "Der Angriff"],
-  ["x (formerly twitter)",               "Der Angriff"],
 
   // ── Politics & Government ─────────────────────────────────
   ["the white house",                    "the bouncy castle"],
@@ -88,6 +84,11 @@ const DEFAULT_SUBS = [
   ["Israeli",                            "The Judean People's Front's"],
   ["people",                             "domesticated primates"],
   ["population",                         "domesticated primates"],
+  ["facebook",                           "Myspace"],
+  ["google",                             "Bing"],
+  ["twitter",                            "Der Angriff"],
+  ["x (formerly twitter)",               "Der Angriff"],
+  ["The Middle East",                    "The Hunger Games"],
 
   // ── UK-Specific ───────────────────────────────────────────
   ["Downing Street",                     "the head prefect's bedsit"],
